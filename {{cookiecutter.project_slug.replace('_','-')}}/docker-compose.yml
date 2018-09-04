@@ -1,0 +1,35 @@
+version: '3.6'
+
+services:
+  # infrastructure
+  db:
+    image: postgres:10.3-alpine
+    environment:
+      POSTGRES_DB: sivdev
+      POSTGRES_USER: sivdev_user
+      POSTGRES_PASSWORD: sivdev_pass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    ports:
+      - "9432:5432"
+
+  # app
+  api:
+    build:
+      context: .
+    command: ["python"]
+    environment:
+      DATABASE_URI: postgresql://sivdev_user:sivdev_pass@db:5432/sivdev
+      PYTHONPATH: .
+    depends_on:
+      - db
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
+    ports:
+      - "7000:7000"
